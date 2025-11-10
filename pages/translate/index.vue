@@ -36,12 +36,19 @@
         {{ translateText }}
 
         <uni-icons
-          class="paste"
+          class="icon paste"
           custom-prefix="iconfont"
           type="icon-niantie"
           size="20"
           @click="onPaste"
         ></uni-icons>
+
+        <!--   <uni-icons
+          class="icon sound"
+          type="sound"
+          size="20"
+          @click="onSound"
+        ></uni-icons> -->
       </template>
     </view>
     <uni-list class="history" border>
@@ -97,8 +104,9 @@
 import { ref, computed } from "vue";
 import { onLoad } from "@dcloudio/uni-app";
 import { throttle, getRandomStr } from "@/utils/common";
+import { textToSpeech } from "@/utils/function";
 import { translateApi } from "./api";
-import { languageList } from "./config";
+import { languageList, defaultLanguageList } from "./config";
 import {
   updateHistoryCache,
   deleteHistoryCache,
@@ -106,7 +114,6 @@ import {
   getHistoryCacheItem,
 } from "./utils";
 
-const defaultLanguageList = ["zh", "en"];
 const popupRef = ref(null);
 const originalText = ref(undefined);
 const translateText = ref(undefined);
@@ -247,6 +254,12 @@ const onPaste = () => {
   });
 };
 
+const onSound = () => {
+  textToSpeech({
+    text: translateText.value,
+  }).start();
+};
+
 const onHistory = (source) => {
   const {
     original,
@@ -309,10 +322,17 @@ onLoad(() => {
     padding-right: 24px;
     background-color: #f5f5f5;
 
-    .paste {
+    .icon {
       position: absolute;
-      top: 12px;
       right: 12px;
+    }
+
+    .paste {
+      top: 12px;
+    }
+
+    .sound {
+      top: 46px;
     }
   }
 

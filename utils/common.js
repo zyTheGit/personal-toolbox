@@ -1,5 +1,3 @@
-import { STORAGE_KEY } from "@/constant";
-
 /**
  * 生成随机数
  * @returns {string} 一个随机数的字符串形式
@@ -42,26 +40,3 @@ export function throttle(fn, gapTime) {
     }
   };
 }
-
-export const setStorageSync = (key, value) => {
-  return uni.setStorageSync(STORAGE_KEY + key, JSON.stringify(value));
-};
-
-export const getStorageSync = (key) => {
-  let obj;
-  try {
-    const value = uni.getStorageSync(STORAGE_KEY + key);
-    obj = value ? JSON.parse(value) : undefined;
-  } catch (error) {
-    console.warn("getStorageSync", error);
-  }
-  return obj;
-};
-
-export const removeStorageSync = (key) => {
-  uni.removeStorageSync(STORAGE_KEY + key);
-};
-
-export const clearStorage = () => {
-  uni.clearStorage();
-};

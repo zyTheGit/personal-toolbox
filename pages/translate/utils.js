@@ -1,4 +1,4 @@
-import { setStorageSync, getStorageSync } from "@/utils/common";
+import { setStorageSync, getStorageSync } from "@/utils/function";
 import { historyCacheLength, historyKey } from "./config";
 
 export const deleteHistoryCache = (source) => {

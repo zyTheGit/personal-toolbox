@@ -2,6 +2,8 @@ export const historyCacheLength = 200;
 
 export const historyKey = "translate-history";
 
+export const defaultLanguageList = ["zh", "en"];
+
 export const languageList = [
   {
     name: "自动检测",
