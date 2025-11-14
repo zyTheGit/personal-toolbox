@@ -75,3 +75,23 @@ export const textToSpeech = (options) => {
     stop,
   };
 };
+
+// 检测网络
+export const checkNetwork = () => {
+  return new Promise((resolve, reject) => {
+    uni.getNetworkType({
+      success: (res) => {
+        if (res.networkType === "none") {
+          reject({
+            errMsg: "无网络连接",
+          });
+          return;
+        }
+        resolve(res.networkType);
+      },
+      fail: (err) => {
+        reject(err);
+      },
+    });
+  });
+};

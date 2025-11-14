@@ -1,5 +1,5 @@
 import { setStorageSync, getStorageSync } from "@/utils/function";
-import { historyCacheLength, historyKey } from "./config";
+import { historyCacheLength, historyKey, tokenKey } from "./config";
 
 export const deleteHistoryCache = (source) => {
   const list = getHistoryCache();
@@ -54,4 +54,21 @@ export const getHistoryCacheItem = (historyList, source) => {
       newList: historyMap.values(),
     };
   }
+};
+
+export const setTokenCache = (params) => {
+  const { expiresIn, token } = params;
+  const expiresDate = Date.now() + expiresIn * 1000;
+  setStorageSync(tokenKey, {
+    expiresDate,
+    token,
+  });
+};
+
+export const getTokenCache = () => {
+  const { expiresDate, token } = getStorageSync(tokenKey) ?? {};
+  if (expiresDate > Date.now()) {
+    return token;
+  }
+  return undefined;
 };

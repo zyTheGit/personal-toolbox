@@ -23,7 +23,8 @@
       trim
       autoHeight
       placeholder="输入文字"
-      suffixIcon="search"
+      focus
+      suffix-icon="search"
       v-model="originalText"
       :input-border="false"
       @iconClick="iconClick"
@@ -43,12 +44,7 @@
           @click="onPaste"
         ></uni-icons>
 
-        <!--   <uni-icons
-          class="icon sound"
-          type="sound"
-          size="20"
-          @click="onSound"
-        ></uni-icons> -->
+        <Audio class="icon sound" @click="onSound" :src="audioSrc" />
       </template>
     </view>
     <uni-list class="history" border>
@@ -101,11 +97,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onBeforeUnmount } from "vue";
 import { onLoad } from "@dcloudio/uni-app";
 import { throttle, getRandomStr } from "@/utils/common";
-import { textToSpeech } from "@/utils/function";
-import { translateApi } from "./api";
+import { translateApi, text2audioApi } from "./api";
 import { languageList, defaultLanguageList } from "./config";
 import {
   updateHistoryCache,
@@ -113,6 +108,8 @@ import {
   getHistoryCache,
   getHistoryCacheItem,
 } from "./utils";
+
+import { Audio } from "@/components";
 
 const popupRef = ref(null);
 const originalText = ref(undefined);
@@ -125,6 +122,7 @@ const translateResult = ref({
   translate: "en",
 });
 const historyList = ref([]);
+const audioSrc = ref("");
 
 const historyReverseList = computed(() => {
   return historyList.value.slice(0).reverse();
@@ -168,9 +166,7 @@ const requestData = (value) => {
 const requestTranslate = () => {
   const value = originalText.value;
   translateText.value = undefined;
-  if (!value) {
-    return;
-  }
+  if (!value) return;
   loading.value = true;
   requestData(value)
     .then((source) => {
@@ -207,12 +203,10 @@ const onTranslate = (source) => {
   const optKey = changeType.value === "translate" ? "original" : "translate";
   for (const [key, value] of list) {
     if (key === changeType.value) {
-      if (code === "auto") {
-        break;
-      }
-      if (value === code) {
-        break;
-      }
+      if (code === "auto") break;
+
+      if (value === code) break;
+
       const optValue = translateResult.value[optKey];
       if (code === optValue) {
         // 如果左边是自动翻译，选择的跟右边一样，不让选择
@@ -255,9 +249,16 @@ const onPaste = () => {
 };
 
 const onSound = () => {
-  textToSpeech({
+  if (audioSrc.value) return;
+  text2audioApi({
     text: translateText.value,
-  }).start();
+  }).then((res) => {
+    const base64 = uni.arrayBufferToBase64(res);
+    audioSrc.value = `data:audio/mp3;base64,${base64}`;
+    // innerAudioContext.onPlay(() => {
+    //   console.log("开始播放");
+    // });
+  });
 };
 
 const onHistory = (source) => {
@@ -271,6 +272,7 @@ const onHistory = (source) => {
   translateResult.value.translate = translate;
   originalText.value = oText;
   translateText.value = tText;
+  audioSrc.value = "";
   uni.pageScrollTo({
     scrollTop: 0, // 滚动到的位置（顶部为 0）
     duration: 100, // 滚动动画时长（毫秒，可选，默认 300）
@@ -295,6 +297,12 @@ onLoad(() => {
   const lst = getHistoryCache();
   historyList.value = lst;
   console.log("history", lst);
+});
+
+onBeforeUnmount(() => {
+  innerAudioContext.pause();
+  innerAudioContext.destroy();
+  innerAudioContext = null;
 });
 </script>
 
@@ -324,7 +332,7 @@ onLoad(() => {
 
     .icon {
       position: absolute;
-      right: 12px;
+      right: 16px;
     }
 
     .paste {
@@ -345,10 +353,14 @@ onLoad(() => {
     box-sizing: border-box;
 
     ::v-deep .is-textarea {
-      align-items: center;
+      // align-items: center;
 
       .uni-textarea-textarea {
         font-size: 16px;
+      }
+
+      .uniui-search {
+        color: #000 !important;
       }
     }
   }

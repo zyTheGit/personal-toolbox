@@ -1,5 +1,5 @@
 {
-    "name" : "工具箱",
+    "name" : "啊这",
     "appid" : "__UNI__750BABB",
     "description" : "个人工具箱集合",
     "versionName" : "1.0.2",
@@ -17,7 +17,8 @@
             "delay" : 0
         },
         "modules" : {
-            "Speech" : {}
+            "Bluetooth" : {},
+            "Barcode" : {}
         },
         /* 模块配置 */
         "distribute" : {
@@ -52,13 +53,7 @@
             },
             /* ios打包配置 */
             "sdkConfigs" : {
-                "speech" : {
-                    "baidu" : {
-                        "appid" : "7202719",
-                        "apikey" : "nqXp4RnQmBBL0ggWslkoGHfq",
-                        "secretkey" : "ZIKz5LrCQvEp4sUTJycZjuMDtWGQUPsi"
-                    }
-                }
+                "speech" : {}
             },
             "splashscreen" : {
                 "androidStyle" : "common",

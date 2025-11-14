@@ -2,7 +2,7 @@
 	"pages": [{
 		"path": "pages/index/index",
 		"style": {
-			"navigationBarTitleText": "工具箱"
+			"navigationBarTitleText": "啊这"
 		}
 	},
 	{
@@ -20,7 +20,7 @@
 ],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
-		"navigationBarTitleText": "工具箱",
+		"navigationBarTitleText": "啊这",
 		"navigationBarBackgroundColor": "#F8F8F8",
 		"backgroundColor": "#F8F8F8",
 		"app-plus": {
