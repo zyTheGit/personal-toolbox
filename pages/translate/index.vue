@@ -16,25 +16,35 @@
         {{ getTranslateText(translateResult.translate) }}
       </view>
     </view>
-    <uni-easyinput
-      class="original"
-      type="textarea"
-      clearable
-      trim
-      autoHeight
-      placeholder="输入文字"
-      focus
-      suffix-icon="search"
-      v-model="originalText"
-      :input-border="false"
-      @iconClick="iconClick"
-    ></uni-easyinput>
-    <view class="dst" v-show="loading || translateText">
+    <view class="original-wrap">
+      <uni-easyinput
+        class="original"
+        type="textarea"
+        clearable
+        trim
+        autoHeight
+        placeholder="输入文字"
+        focus
+        suffix-icon="search"
+        v-model="originalTextResult.original"
+        :input-border="false"
+        @iconClick="iconClick"
+      >
+      </uni-easyinput>
+
+      <audio-player
+        class="original-sound"
+        @play="() => onSound('original')"
+        :src="audioSrcResult.original"
+        v-if="supportAudio && originalTextResult.original"
+      />
+    </view>
+    <view class="dst" v-show="loading || originalTextResult.translate">
       <template v-if="loading">
         <view>加载中...</view>
       </template>
       <template v-else>
-        {{ translateText }}
+        {{ originalTextResult.translate }}
 
         <uni-icons
           class="icon paste"
@@ -44,7 +54,12 @@
           @click="onPaste"
         ></uni-icons>
 
-        <Audio class="icon sound" @click="onSound" :src="audioSrc" />
+        <audio-player
+          class="icon sound"
+          @play="() => onSound('translate')"
+          :src="audioSrcResult.translate"
+          v-if="supportAudio"
+        />
       </template>
     </view>
     <uni-list class="history" border>
@@ -97,7 +112,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onBeforeUnmount } from "vue";
+import { ref, computed, onBeforeUnmount, watch } from "vue";
 import { onLoad } from "@dcloudio/uni-app";
 import { throttle, getRandomStr } from "@/utils/common";
 import { translateApi, text2audioApi } from "./api";
@@ -109,23 +124,32 @@ import {
   getHistoryCacheItem,
 } from "./utils";
 
-import { Audio } from "@/components";
+import { AudioPlayer } from "@/components";
 
 const popupRef = ref(null);
-const originalText = ref(undefined);
-const translateText = ref(undefined);
 // original , translate
 const changeType = ref("");
 const loading = ref(false);
+const originalTextResult = ref({
+  original: "",
+  translate: "",
+});
 const translateResult = ref({
   original: "auto",
   translate: "en",
 });
+const audioSrcResult = ref({
+  original: "",
+  translate: "",
+});
 const historyList = ref([]);
-const audioSrc = ref("");
 
 const historyReverseList = computed(() => {
   return historyList.value.slice(0).reverse();
+});
+
+const supportAudio = computed(() => {
+  return ["en", "zh"].includes(translateResult.value.translate);
 });
 
 const getChecked = (code) => {
@@ -164,19 +188,23 @@ const requestData = (value) => {
 };
 
 const requestTranslate = () => {
-  const value = originalText.value;
-  translateText.value = undefined;
+  const value = originalTextResult.value.translate;
+  originalTextResult.value.translate = undefined;
+  audioSrcResult.value = {
+    original: "",
+    translate: "",
+  };
   if (!value) return;
   loading.value = true;
   requestData(value)
     .then((source) => {
       const newList = updateHistoryCache(source);
-      translateText.value = source.translateText;
+      originalTextResult.value.translate = source.translateText;
       historyList.value = newList;
     })
     .catch((e) => {
       console.error("requestTranslate.catch", e);
-      translateText.value = undefined;
+      originalTextResult.value.translate = undefined;
     })
     .finally(() => {
       loading.value = false;
@@ -230,7 +258,7 @@ const onTranslate = (source) => {
 
 const onPaste = () => {
   uni.setClipboardData({
-    data: translateText.value,
+    data: translateResult.value.translate,
     success: function (res) {
       uni.showToast({
         title: "译文已复制",
@@ -248,31 +276,31 @@ const onPaste = () => {
   });
 };
 
-const onSound = () => {
-  if (audioSrc.value) return;
+const onSound = (type) => {
+  const text = originalTextResult.value[type];
   text2audioApi({
-    text: translateText.value,
+    text,
   }).then((res) => {
     const base64 = uni.arrayBufferToBase64(res);
-    audioSrc.value = `data:audio/mp3;base64,${base64}`;
-    // innerAudioContext.onPlay(() => {
-    //   console.log("开始播放");
-    // });
+    audioSrcResult.value[type] = `data:audio/mp3;base64,${base64}`;
   });
 };
 
 const onHistory = (source) => {
-  const {
+  const { original, translate, originalText, translateText } = source;
+
+  translateResult.value = {
     original,
     translate,
-    originalText: oText,
-    translateText: tText,
-  } = source;
-  translateResult.value.original = original;
-  translateResult.value.translate = translate;
-  originalText.value = oText;
-  translateText.value = tText;
-  audioSrc.value = "";
+  };
+  originalTextResult.value = {
+    original: originalText,
+    translate: translateText,
+  };
+  audioSrcResult.value = {
+    original: "",
+    translate: "",
+  };
   uni.pageScrollTo({
     scrollTop: 0, // 滚动到的位置（顶部为 0）
     duration: 100, // 滚动动画时长（毫秒，可选，默认 300）
@@ -297,12 +325,6 @@ onLoad(() => {
   const lst = getHistoryCache();
   historyList.value = lst;
   console.log("history", lst);
-});
-
-onBeforeUnmount(() => {
-  innerAudioContext.pause();
-  innerAudioContext.destroy();
-  innerAudioContext = null;
 });
 </script>
 
@@ -344,24 +366,34 @@ onBeforeUnmount(() => {
     }
   }
 
-  .original {
-    display: flex;
-    align-items: center;
-    align-content: center;
-    padding: 8px 10px;
-    border: 1px solid #e0e0e0;
-    box-sizing: border-box;
+  .original-wrap {
+    position: relative;
 
-    ::v-deep .is-textarea {
-      // align-items: center;
+    .original {
+      display: flex;
+      align-items: center;
+      align-content: center;
+      padding: 8px 10px;
+      border: 1px solid #e0e0e0;
+      box-sizing: border-box;
 
-      .uni-textarea-textarea {
-        font-size: 16px;
+      ::v-deep .is-textarea {
+        // align-items: center;
+
+        .uni-textarea-textarea {
+          font-size: 16px;
+        }
+
+        .uniui-search {
+          color: #000 !important;
+        }
       }
+    }
 
-      .uniui-search {
-        color: #000 !important;
-      }
+    .original-sound {
+      position: absolute;
+      right: 16px;
+      top: 46px;
     }
   }
 

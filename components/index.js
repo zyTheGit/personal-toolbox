@@ -1,2 +1,2 @@
-import Audio from "./audio/index.vue";
-export { Audio };
+import AudioPlayer from "./audio-player/index.vue";
+export { AudioPlayer };
