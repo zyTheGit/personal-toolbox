@@ -1,107 +1,95 @@
-import {
-	request
-} from "@/utils/request";
-import {
-	getRandomStr
-} from "@/utils/common";
+import { request } from "@/utils/request";
+import { getRandomStr, queryString } from "@/utils/common";
 import md5 from "@/utils/md5";
-import {
-	TRANSLATE_CONFIG
-} from "@/constant";
-import {
-	setTokenCache,
-	getTokenCache
-} from "./utils";
+import { TRANSLATE_CONFIG, CUID } from "@/constant";
+import { setTokenCache, getTokenCache } from "./utils";
 
-const {
-	translate,
-	text2audio
-} = TRANSLATE_CONFIG;
+const { translate, text2audio } = TRANSLATE_CONFIG;
+
+const getAccessToken = () => {
+  const { tokenUrl, appid, secretKey } = text2audio;
+  return request({
+    url: tokenUrl,
+    data: {
+      grant_type: "client_credentials",
+      client_id: appid,
+      client_secret: secretKey,
+    },
+  }).then((res) => {
+    const { access_token, expires_in } = res.data;
+    setTokenCache({
+      expiresIn: expires_in,
+      token: access_token,
+    });
+    return access_token;
+  });
+};
 
 export const translateApi = (params) => {
-	const {
-		url,
-		appid,
-		secretKey
-	} = translate;
-	const {
-		keywords: q,
-		from,
-		to
-	} = params;
-	const salt = getRandomStr();
-	const sign = appid + q + salt + secretKey;
-	const signResult = md5.hex_md5_32(sign);
-	return request({
-		url,
-		data: {
-			q,
-			appid,
-			salt,
-			from: from,
-			to: to,
-			sign: signResult,
-		},
-	});
+  const { url, appid, secretKey } = translate;
+  const { keywords: q, from, to } = params;
+  const salt = getRandomStr();
+  const sign = appid + q + salt + secretKey;
+  const signResult = md5.hex_md5_32(sign);
+  return request({
+    url,
+    data: {
+      q,
+      appid,
+      salt,
+      from: from,
+      to: to,
+      sign: signResult,
+    },
+  });
 };
 
 export const text2audioApi = async (params) => {
-	const {
-		url
-	} = text2audio;
-	const {
-		text
-	} = params;
-	const cacheToken = getTokenCache();
-	const token = cacheToken ? cacheToken : await getAccessToken();
-	const requestUrl = `${url}?tok=${token}&tex=${text}&ctp=1&lan=zh&cuid=test1&per=4194&aue=3`;
-	return uni.downloadFile({
-		url: requestUrl,
-	}).then(res => {
-		return res.tempFilePath;
-	})
-	// return request({
-	//   url,
-	//   data: {
-	//     tex: text,
-	//     tok: token,
-	//     ctp: 1,
-	//     lan: "zh",
-	//     cuid: "test1",
-	//     per: "4194",
-	//     aue: 3,
-	//   },
-	//   header: {
-	//     "Content-Type": "application/x-www-form-urlencoded",
-	//   },
-	//   responseType: "arraybuffer",
-	// }).then((res) => {
-	//   return res.data;
-	// });
+  const { url } = text2audio;
+  const { text } = params;
+  const cacheToken = getTokenCache();
+  const token = cacheToken ? cacheToken : await getAccessToken();
+  const urlParams = queryString.stringify({
+    tex: encodeURIComponent(encodeURIComponent(text)),
+    tok: token,
+    ctp: 1,
+    lan: "zh",
+    cuid: CUID,
+    per: "4194",
+    aue: 3,
+  });
+  const requestUrl = `${url}?${urlParams}`;
+  return uni
+    .downloadFile({
+      url: requestUrl,
+    })
+    .then((res) => {
+      return res.tempFilePath;
+    });
 };
 
-const getAccessToken = () => {
-	const {
-		tokenUrl,
-		appid,
-		secretKey
-	} = text2audio;
-	return request({
-		url: tokenUrl,
-		data: {
-			grant_type: "client_credentials",
-			client_id: appid,
-			client_secret: secretKey,
-		},
-	}).then((res) => {
-		const {
-			access_token,
-			expires_in
-		} = res.data;
-		setTokenCache({
-			expiresIn: expires_in,
-			token: access_token
-		});
-		return access_token;
-	});
+// 返回的流文件转成 base64 使用uni.createInnerAudioContext 播放，无法播放（只支持H5端）
+export const text2audioApiBak = async (params) => {
+  const { url } = text2audio;
+  const { text } = params;
+  const cacheToken = getTokenCache();
+  const token = cacheToken ? cacheToken : await getAccessToken();
+  return request({
+    url,
+    data: {
+      tex: text,
+      tok: token,
+      ctp: 1,
+      lan: "zh",
+      cuid: CUID,
+      per: "4194",
+      aue: 3,
+    },
+    header: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    responseType: "arraybuffer",
+  }).then((res) => {
+    return res.data;
+  });
 };

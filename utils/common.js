@@ -40,3 +40,46 @@ export function throttle(fn, gapTime) {
     }
   };
 }
+
+export function toString(obj) {
+  return Object.prototype.toString.call(obj);
+}
+
+export function isObject(obj) {
+  return toString(obj) === "[object Object]";
+}
+
+export function isFunction(obj) {
+  return toString(obj) === "[object Function]";
+}
+
+export function isArray(obj) {
+  return toString(obj) === "[object Array]";
+}
+
+export function isString(obj) {
+  return toString(obj) === "[object String]";
+}
+
+// 实现 queryString.parse 和 queryString.stringify方法
+export const queryString = {
+  parse(str) {
+    const obj = {};
+    const reg = /[?&][^?&]+=[^?&]+/g;
+    const arr = str.match(reg);
+    if (arr) {
+      arr.forEach((item) => {
+        const tempArr = item.substring(1).split("=");
+        const key = decodeURIComponent(tempArr[0]);
+        const val = decodeURIComponent(tempArr[1]);
+        obj[key] = val;
+      });
+    }
+    return obj;
+  },
+  stringify(params) {
+    return Object.keys(params)
+      .map((key) => `${key}=${params[key]}`)
+      .join("&");
+  },
+};
