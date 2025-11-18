@@ -1,2 +1,4 @@
 import AudioPlayer from "./audio-player/index.vue";
-export { AudioPlayer };
+import TranslateList from "./translate-list/index.vue";
+
+export { AudioPlayer, TranslateList };

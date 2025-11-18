@@ -31,7 +31,7 @@ export const updateHistoryCache = (source) => {
 };
 
 export const getHistoryCache = () => {
-  const historyList = getStorageSync(historyKey) ?? [];
+  const historyList = getStorageSync(historyKey) || [];
   return historyList;
 };
 
@@ -66,7 +66,7 @@ export const setTokenCache = (params) => {
 };
 
 export const getTokenCache = () => {
-  const { expiresDate, token } = getStorageSync(tokenKey) ?? {};
+  const { expiresDate, token } = getStorageSync(tokenKey) || {};
   if (expiresDate > Date.now()) {
     return token;
   }

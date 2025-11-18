@@ -12,7 +12,7 @@
           :key="j"
           @click="() => openPage(item)"
         >
-          <view class="grid-item-box" style="background-color: #fff">
+          <view class="grid-item-box">
             <uni-icons
               custom-prefix="iconfont"
               :type="item.icon"
@@ -56,6 +56,7 @@ const openPage = (source) => {
     justify-content: center;
     align-items: center;
     height: 100%;
+    background-color: #fff;
 
     .text {
       color: #333;

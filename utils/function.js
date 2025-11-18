@@ -7,11 +7,19 @@ export const setStorageSync = (key, value) => {
   );
 };
 
-export const getStorageSync = (key) => {
+/**
+ * 获取本地缓存
+ * @param {*} key
+ * 是否报了默认值，默认false，将空值置为undefined
+ * @param {boolean} hasDefaultValue
+ * @returns
+ */
+
+export const getStorageSync = (key, hasDefaultValue = false) => {
   let obj;
   try {
     const value = uni.getStorageSync(STORAGE_KEY + key);
-    obj = value ? JSON.parse(value) : value;
+    obj = value ? JSON.parse(value) : hasDefaultValue ? value : undefined;
   } catch (error) {
     console.warn("getStorageSync", error);
   }

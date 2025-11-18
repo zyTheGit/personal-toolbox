@@ -8,6 +8,12 @@ export const appList = [
         icon: "icon-yuyanfanyi",
         type: "page",
       },
+      {
+        label: "个人博客",
+        path: "http://s.aniusky.dpdns.org:10090",
+        icon: "",
+        type: "webview",
+      },
     ],
   },
   {
@@ -47,6 +53,17 @@ export const appList = [
         label: "BBC NEWS",
         path: "https://www.bbc.com/zhongwen/simp",
         icon: "icon-jingwaiwangzhan",
+        type: "webview",
+      },
+    ],
+  },
+  {
+    title: "视频播放",
+    children: [
+      {
+        label: "个人影音",
+        path: "http://s.aniusky.dpdns.org:10086",
+        icon: "icon-bilibili",
         type: "webview",
       },
     ],

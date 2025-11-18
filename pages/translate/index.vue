@@ -28,15 +28,14 @@
         suffix-icon="search"
         v-model="textResult.original"
         :input-border="false"
-        @iconClick="iconClick"
+        @iconClick="onSearch"
       ></uni-easyinput>
 
       <audio-player
-        key="original"
+        v-if="getSupportAudio() && textResult.original"
         class="original-sound"
         @play="() => onSound('original')"
         :src="audioResult.original"
-        v-if="getSupportAudio() && textResult.original"
       />
     </view>
     <view class="dst" v-show="loading || textResult.translate">
@@ -55,41 +54,19 @@
         ></uni-icons>
 
         <audio-player
-          key="original"
-          class="icon sound"
-          @play="() => onSound('translate')"
-          :src="audioResult.translate"
           v-if="getSupportAudio('translate')"
+          :src="audioResult.translate"
+          @play="() => onSound('translate')"
+          class="icon sound"
         />
       </template>
     </view>
-    <uni-list class="history" border>
-      <uni-list-item
-        v-for="item in historyReverseList"
-        clickable
-        :key="item.key"
-      >
-        <template v-slot:body>
-          <view class="history-item" @click="onHistory(item)">
-            <view class="history-item-header">
-              {{ item.originalText }}
-            </view>
-            <view class="history-item-desc">
-              {{ item.translateText }}
-            </view>
-          </view>
-        </template>
 
-        <template v-slot:footer>
-          <uni-icons
-            custom-prefix="iconfont"
-            type="icon-a-ziyuan824"
-            size="20"
-            @click="() => onDelete(item)"
-          ></uni-icons>
-        </template>
-      </uni-list-item>
-    </uni-list>
+    <translate-list
+      :list="historyList"
+      @history="onHistory"
+      @delete="onDelete"
+    />
 
     <uni-popup ref="popupRef" type="top" background-color="#fff">
       <view class="popup-wrap">
@@ -128,7 +105,7 @@ import {
   getHistoryCacheItem,
 } from "./utils";
 
-import { AudioPlayer } from "@/components";
+import { AudioPlayer, TranslateList } from "@/components";
 
 const popupRef = ref(null);
 // original , translate
@@ -140,6 +117,7 @@ const textResult = ref({
 });
 const translateResult = ref({
   original: "auto",
+  sourceOriginal: "auto",
   translate: "en",
 });
 const audioResult = ref({
@@ -150,12 +128,13 @@ const audioResult = ref({
 });
 const historyList = ref([]);
 
-const historyReverseList = computed(() => {
-  return historyList.value.slice(0).reverse();
-});
-
 const getSupportAudio = (code = "original") => {
-  return ["en", "zh"].includes(translateResult.value[code]);
+  let value = translateResult.value[code];
+  if (code === "original") {
+    value = translateResult.value.sourceOriginal;
+  }
+
+  return ["en", "zh"].includes(value);
 };
 
 const getChecked = (code) => {
@@ -202,26 +181,24 @@ const requestTranslate = () => {
     translate: "",
     translateText: "",
   };
-  textResult.value.translate = "";
-  audioResult.value.original = value;
   loading.value = true;
   requestData(value)
     .then((source) => {
-      const newList = updateHistoryCache(source);
-      audioResult.value.translateText = textResult.value.translate =
-        source.translateText;
-      historyList.value = newList;
+      const list = updateHistoryCache(source);
+      translateResult.value.sourceOriginal = source.original;
+      textResult.value.translate = source.translateText;
+      historyList.value = list;
     })
     .catch((e) => {
       console.error("requestTranslate.catch", e);
-      audioResult.value.translateText = textResult.value.translate = undefined;
+      textResult.value.translate = "";
     })
     .finally(() => {
       loading.value = false;
     });
 };
 
-const iconClick = throttle(requestTranslate, 1000);
+const onSearch = throttle(requestTranslate, 1000);
 
 const onPopup = (value) => {
   changeType.value = value;
@@ -240,9 +217,10 @@ const onTranslate = (source) => {
   const list = Object.entries(translateResult.value);
   const optKey = changeType.value === "translate" ? "original" : "translate";
   for (const [key, value] of list) {
-    if (key !== changeType.value) break;
+    if (key !== changeType.value) continue;
 
-    if (code === "auto" || value === code) break;
+    if (value === code) break;
+    if (code === "auto" && changeType.value === "translate") break;
 
     const optValue = translateResult.value[optKey];
     if (code === optValue) {
@@ -337,10 +315,17 @@ const onDelete = (source) => {
   });
 };
 
+// 切换左侧自动语言，自动翻译的值重置到用户选择的内容
+watch(
+  () => translateResult.value.original,
+  (value) => {
+    translateResult.value.sourceOriginal = value;
+  }
+);
+
 onLoad(() => {
   const lst = getHistoryCache();
   historyList.value = lst;
-  console.log("history", lst);
 });
 </script>
 
@@ -410,22 +395,6 @@ onLoad(() => {
       position: absolute;
       right: 16px;
       top: 46px;
-    }
-  }
-
-  .history {
-    &-item {
-      flex: 1;
-
-      &-desc {
-        color: #999999;
-      }
-    }
-
-    ::v-deep .uni-list-item__container {
-      align-items: center;
-      gap: 6px;
-      padding: 12px;
     }
   }
 }
