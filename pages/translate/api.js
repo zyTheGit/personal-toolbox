@@ -1,7 +1,7 @@
 import { request } from "@/utils/request";
 import { getRandomStr, queryString } from "@/utils/common";
 import md5 from "@/utils/md5";
-import { TRANSLATE_CONFIG, CUID } from "@/constant";
+import { TRANSLATE_CONFIG } from "@/constant";
 import { setTokenCache, getTokenCache } from "./utils";
 
 const { translate, text2audio } = TRANSLATE_CONFIG;
@@ -45,16 +45,16 @@ export const translateApi = (params) => {
 };
 
 export const text2audioApi = async (params) => {
-  const { url } = text2audio;
+  const { url, cuid } = text2audio;
   const { text } = params;
   const cacheToken = getTokenCache();
   const token = cacheToken ? cacheToken : await getAccessToken();
   const urlParams = queryString.stringify({
+    cuid,
     tex: encodeURIComponent(encodeURIComponent(text)),
     tok: token,
     ctp: 1,
     lan: "zh",
-    cuid: CUID,
     per: "4194",
     aue: 3,
   });

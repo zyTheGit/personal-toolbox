@@ -1,9 +1,12 @@
 .hbuilderx
 
-unpackage/cache
-unpackage/debug
-unpackage/release
-unpackage/dist
-unpackage/resources
+# unpackage/cache
+# unpackage/debug
+# unpackage/release
+# unpackage/dist
+# unpackage/resources
+
+unpackage
+!unpackage/res
 
 uni_modules

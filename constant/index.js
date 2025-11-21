@@ -16,9 +16,10 @@ export const TRANSLATE_CONFIG = {
     appid: "nqXp4RnQmBBL0ggWslkoGHfq",
     // 密钥
     secretKey: "ZIKz5LrCQvEp4sUTJycZjuMDtWGQUPsi",
+    // cuid
+    cuid: "toolboxc5NPh6B3",
   },
 };
 
 export const STORAGE_KEY = "toolbox-";
 
-export const CUID = "toolboxc5NPh6B3";
