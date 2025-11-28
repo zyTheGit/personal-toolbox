@@ -64,3 +64,8 @@ export const languageList = [
     code: "pl",
   },
 ];
+
+export const changeTypeMap = {
+  ORIGINAL: "original",
+  TRANSLATE: "translate",
+};

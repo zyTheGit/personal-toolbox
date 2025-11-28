@@ -8,7 +8,7 @@
     >
       <uni-grid :column="3">
         <uni-grid-item
-          v-for="(item, j) in source.children"
+          v-for="(item, j) in sortChildren(source.children)"
           :key="j"
           @click="() => openPage(item)"
         >
@@ -28,6 +28,17 @@
 
 <script setup>
 import { appList } from "./config.js";
+
+const sortChildren = (children) => {
+  return children.sort((a, b) => {
+    const aSort = a.sort || 0;
+    const bSort = b.sort || 0;
+    if (aSort !== bSort) {
+      return aSort - bSort;
+    }
+    return a.label.localeCompare(b.label);
+  });
+};
 
 const openPage = (source) => {
   const { type, path, label } = source;

@@ -1,7 +1,7 @@
 <template>
   <view class="translate">
     <view class="translate-header">
-      <view class="left" @click="() => onPopup('original')">
+      <view class="left" @click="() => onPopup(changeTypeMap.ORIGINAL)">
         {{ getTranslateText(translateResult.original) }}
       </view>
       <view class="center">
@@ -34,7 +34,7 @@
       <audio-player
         v-if="getSupportAudio() && textResult.original"
         class="original-sound"
-        @play="() => onSound('original')"
+        @play="() => onSound(changeTypeMap.ORIGINAL)"
         :src="audioResult.original"
       />
     </view>
@@ -54,9 +54,9 @@
         ></uni-icons>
 
         <audio-player
-          v-if="getSupportAudio('translate')"
+          v-if="getSupportAudio(changeTypeMap.TRANSLATE)"
           :src="audioResult.translate"
-          @play="() => onSound('translate')"
+          @play="() => onSound(changeTypeMap.TRANSLATE)"
           class="icon sound"
         />
       </template>
@@ -77,7 +77,11 @@
           @click="() => onTranslate(source)"
         >
           <template
-            v-if="changeType === 'translate' ? source.code !== 'auto' : true"
+            v-if="
+              changeType === changeTypeMap.TRANSLATE
+                ? source.code !== 'auto'
+                : true
+            "
           >
             <uni-icons
               class="item-icon"
@@ -97,7 +101,7 @@ import { ref, computed, onBeforeUnmount, watch } from "vue";
 import { onLoad } from "@dcloudio/uni-app";
 import { throttle, getRandomStr } from "@/utils/common";
 import { translateApi, text2audioApi } from "./api";
-import { languageList, defaultLanguageList } from "./config";
+import { languageList, defaultLanguageList, changeTypeMap } from "./config";
 import {
   updateHistoryCache,
   deleteHistoryCache,
@@ -128,9 +132,9 @@ const audioResult = ref({
 });
 const historyList = ref([]);
 
-const getSupportAudio = (code = "original") => {
+const getSupportAudio = (code = changeTypeMap.ORIGINAL) => {
   let value = translateResult.value[code];
-  if (code === "original") {
+  if (code === changeTypeMap.ORIGINAL) {
     value = translateResult.value.sourceOriginal;
   }
 
@@ -215,12 +219,15 @@ const onChangeLanguage = () => {
 const onTranslate = (source) => {
   const { code } = source;
   const list = Object.entries(translateResult.value);
-  const optKey = changeType.value === "translate" ? "original" : "translate";
+  const optKey =
+    changeType.value === changeTypeMap.TRANSLATE
+      ? changeTypeMap.ORIGINAL
+      : changeTypeMap.TRANSLATE;
   for (const [key, value] of list) {
     if (key !== changeType.value) continue;
 
     if (value === code) break;
-    if (code === "auto" && changeType.value === "translate") break;
+    if (code === "auto" && changeType.value === changeTypeMap.TRANSLATE) break;
 
     const optValue = translateResult.value[optKey];
     if (code === optValue) {
@@ -330,103 +337,5 @@ onLoad(() => {
 </script>
 
 <style lang="less" scoped>
-.translate {
-  width: 100%;
-  height: 100%;
-  padding: 8px;
-  box-sizing: border-box;
-
-  &-header {
-    display: flex;
-    width: 100%;
-    height: 50px;
-    justify-content: center;
-    align-items: center;
-    gap: 20px;
-    color: #1a73e8;
-  }
-
-  .dst {
-    position: relative;
-    min-height: 100px;
-    padding: 12px;
-    padding-right: 48px;
-    background-color: #f5f5f5;
-
-    .icon {
-      position: absolute;
-      right: 16px;
-    }
-
-    .paste {
-      top: 12px;
-    }
-
-    .sound {
-      top: 46px;
-    }
-  }
-
-  .original-wrap {
-    position: relative;
-
-    .original {
-      display: flex;
-      align-items: center;
-      align-content: center;
-      padding: 8px 10px;
-      border: 1px solid #e0e0e0;
-      box-sizing: border-box;
-
-      ::v-deep .is-textarea {
-        // align-items: center;
-
-        .uni-textarea-textarea {
-          font-size: 16px;
-        }
-
-        .uniui-search {
-          color: #000 !important;
-        }
-      }
-    }
-
-    .original-sound {
-      position: absolute;
-      right: 16px;
-      top: 46px;
-    }
-  }
-}
-
-.popup-wrap {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: 100%;
-  padding: 12px;
-  box-sizing: border-box;
-
-  .item {
-    position: relative;
-    padding-left: 40px;
-    line-height: 40px;
-
-    &:active {
-      background-color: #eee;
-    }
-
-    &-icon {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 1;
-    }
-  }
-}
-
-::v-deep .uni-popup > uni-view {
-  height: 100%;
-}
+@import "./index.less";
 </style>
