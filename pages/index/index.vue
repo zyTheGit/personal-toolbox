@@ -2,7 +2,7 @@
   <view class="container">
     <view class="header">
       <image class="logo" src="/static/uni.png" mode="widthFix" />
-      <text class="title">个人工具箱</text>
+      <text class="title">工具箱</text>
       <text class="subtitle">简洁高效的日常工具集合</text>
     </view>
 
