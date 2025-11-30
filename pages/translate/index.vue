@@ -1,22 +1,17 @@
 <template>
   <view class="translate">
     <view class="translate-header">
-      <view class="left" @click="() => onPopup(changeTypeMap.ORIGINAL)">
+      <view class="chip" @click="() => onPopup(changeTypeMap.ORIGINAL)">
         {{ getTranslateText(translateResult.original) }}
       </view>
-      <view class="center">
-        <uni-icons
-          custom-prefix="iconfont"
-          type="icon-qiehuan"
-          size="20"
-          @click="onChangeLanguage"
-        ></uni-icons>
+      <view class="swap" @click="onChangeLanguage">
+        <uni-icons custom-prefix="iconfont" type="icon-qiehuan" size="18"></uni-icons>
       </view>
-      <view class="right" @click="() => onPopup('translate')">
+      <view class="chip" @click="() => onPopup('translate')">
         {{ getTranslateText(translateResult.translate) }}
       </view>
     </view>
-    <view class="original-wrap">
+    <view class="original-wrap card">
       <uni-easyinput
         class="original"
         type="textarea"
@@ -31,34 +26,38 @@
         @iconClick="onSearch"
       ></uni-easyinput>
 
-      <audio-player
-        v-if="getSupportAudio() && textResult.original"
-        class="original-sound"
-        @play="() => onSound(changeTypeMap.ORIGINAL)"
-        :src="audioResult.original"
-      />
+      <view class="action-group original-audio">
+        <audio-player
+          v-if="getSupportAudio() && textResult.original"
+          @play="() => onSound(changeTypeMap.ORIGINAL)"
+          :src="audioResult.original"
+          class="sound"
+        />
+      </view>
     </view>
-    <view class="dst" v-show="loading || textResult.translate">
+    <view class="dst card" v-show="loading || textResult.translate">
       <template v-if="loading">
         <view>加载中...</view>
       </template>
       <template v-else>
-        {{ textResult.translate }}
+        <view class="dst-content">{{ textResult.translate }}</view>
 
-        <uni-icons
-          class="icon paste"
-          custom-prefix="iconfont"
-          type="icon-niantie"
-          size="20"
-          @click="onPaste"
-        ></uni-icons>
+        <view class="action-group">
+          <uni-icons
+            class="paste"
+            custom-prefix="iconfont"
+            type="icon-niantie"
+            size="20"
+            @click="onPaste"
+          ></uni-icons>
 
-        <audio-player
-          v-if="getSupportAudio(changeTypeMap.TRANSLATE)"
-          :src="audioResult.translate"
-          @play="() => onSound(changeTypeMap.TRANSLATE)"
-          class="icon sound"
-        />
+          <audio-player
+            v-if="getSupportAudio(changeTypeMap.TRANSLATE)"
+            :src="audioResult.translate"
+            @play="() => onSound(changeTypeMap.TRANSLATE)"
+            class="sound"
+          />
+        </view>
       </template>
     </view>
 
@@ -97,7 +96,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onBeforeUnmount, watch } from "vue";
+import { ref, watch } from "vue";
 import { onLoad } from "@dcloudio/uni-app";
 import { throttle, getRandomStr } from "@/utils/common";
 import { translateApi, text2audioApi } from "./api";
@@ -291,6 +290,7 @@ const onHistory = (source) => {
   translateResult.value = {
     original,
     translate,
+    sourceOriginal:original
   };
   textResult.value = {
     original: originalText,
