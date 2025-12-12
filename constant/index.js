@@ -23,3 +23,6 @@ export const TRANSLATE_CONFIG = {
 
 export const STORAGE_KEY = "toolbox-";
 
+export const STORAGE_HOME_KEY = "home-app-list";
+
+export const STORAGE_LANG_KEY = "translate-lang-remember";

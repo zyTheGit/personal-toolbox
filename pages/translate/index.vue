@@ -5,30 +5,38 @@
         {{ getTranslateText(translateResult.original) }}
       </view>
       <view class="swap" @click="onChangeLanguage">
-        <uni-icons custom-prefix="iconfont" type="icon-qiehuan" size="18"></uni-icons>
+        <uni-icons
+          custom-prefix="iconfont"
+          type="icon-qiehuan"
+          size="18"
+        ></uni-icons>
       </view>
       <view class="chip" @click="() => onPopup('translate')">
         {{ getTranslateText(translateResult.translate) }}
       </view>
     </view>
     <view class="original-wrap card">
-      <uni-easyinput
+      <textarea
         class="original"
-        type="textarea"
-        clearable
-        trim
-        autoHeight
-        placeholder="输入文字"
-        focus
-        suffix-icon="search"
+        auto-height
+        :maxlength="-1"
         v-model="textResult.original"
-        :input-border="false"
-        @iconClick="onSearch"
-      ></uni-easyinput>
+        confirm-type="search"
+        placeholder="输入文字"
+        @confirm="onSearch"
+      ></textarea>
 
-      <view class="action-group original-audio">
+      <view
+        class="action-group original-audio"
+        v-if="getSupportAudio() && textResult.original"
+      >
+        <uni-icons
+          class="clear"
+          type="close"
+          size="20"
+          @click="onClear"
+        ></uni-icons>
         <audio-player
-          v-if="getSupportAudio() && textResult.original"
           @play="() => onSound(changeTypeMap.ORIGINAL)"
           :src="audioResult.original"
           class="sound"
@@ -98,7 +106,9 @@
 <script setup>
 import { ref, watch } from "vue";
 import { onLoad } from "@dcloudio/uni-app";
+import { getStorageSync, setStorageSync } from "@/utils/function";
 import { throttle, getRandomStr } from "@/utils/common";
+import { STORAGE_LANG_KEY } from "@/constant";
 import { translateApi, text2audioApi } from "./api";
 import { languageList, defaultLanguageList, changeTypeMap } from "./config";
 import {
@@ -267,6 +277,11 @@ const onPaste = () => {
   });
 };
 
+const onClear = () => {
+  textResult.value.original = "";
+  textResult.value.translate = "";
+};
+
 const onSound = (type) => {
   const text = textResult.value[type];
   const textKey = `${type}Text`;
@@ -290,7 +305,7 @@ const onHistory = (source) => {
   translateResult.value = {
     original,
     translate,
-    sourceOriginal:original
+    sourceOriginal: original,
   };
   textResult.value = {
     original: originalText,
@@ -333,7 +348,23 @@ watch(
 onLoad(() => {
   const lst = getHistoryCache();
   historyList.value = lst;
+
+  const savedLang = getStorageSync(STORAGE_LANG_KEY);
+  if (savedLang) {
+    translateResult.value = { ...translateResult.value, ...savedLang };
+  }
 });
+
+watch(
+  () => translateResult.value,
+  (val) => {
+    setStorageSync(STORAGE_LANG_KEY, {
+      original: val.original,
+      translate: val.translate,
+    });
+  },
+  { deep: true }
+);
 </script>
 
 <style lang="less" scoped>
